@@ -96,6 +96,21 @@ RUN chmod ug+x $INSTALL_DIR/*.sh && \
     sync && \
     $INSTALL_DIR/$CHECK_SPACE_FILE && \
     $INSTALL_DIR/$SETUP_LINUX_FILE && \
+    # Upgrade PyYAML to address CVE-2020-14343 - compatible with both OL7 and OL8
+    if command -v dnf &> /dev/null; then \
+        # Oracle Linux 8 - use dnf
+        dnf config-manager --set-enabled ol8_addons && \
+        dnf install -y python3-pyyaml-5.4.1 && \
+        dnf clean all; \
+    elif command -v yum &> /dev/null; then \
+        # Oracle Linux 7 - use yum
+        yum-config-manager --enable ol7_addons && \
+        yum install -y python36-pyyaml-5.4.1 && \
+        yum clean all; \
+    else \
+        echo "Error: Neither dnf nor yum found.  This build requires either dnf or yum to be installed."; \
+        exit 1; \
+    fi && \
     rm -rf $INSTALL_DIR
 
 
@@ -134,7 +149,10 @@ COPY --chown=oracle:dba --from=builder $ORACLE_BASE $ORACLE_BASE
 
 USER root
 
-# Copy JDK file that user must download manually from Oracle
+# Replace the JDK that comes with the install binaries with a patched version
+#   to address CVEs that arose after the install binaries were released.
+# Oracle patches binaries through paid support. This approach is apropriate for
+#   non-production uses, only.
 COPY --chown=oracle:dba $JDK_FILE /tmp/
 
 # Upgrade JDK to 1.8.0_441 to address multiple CVEs
