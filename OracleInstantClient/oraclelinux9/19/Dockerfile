@@ -79,9 +79,10 @@ ARG update=26
 
 RUN  dnf -y install oracle-instantclient-release-el9 && \
      dnf -y install oracle-instantclient${release}.${update}-basic oracle-instantclient${release}.${update}-devel oracle-instantclient${release}.${update}-sqlplus && \
+     dnf -y install oracle-instantclient${release}.${update}-tools && \
      rm -rf /var/cache/dnf
 
 # Uncomment if the tools package is added
-# ENV PATH=$PATH:/usr/lib/oracle/${release}.${update}/client64/bin
+ENV PATH=$PATH:/usr/lib/oracle/${release}.${update}/client64/bin
 
 CMD ["sqlplus", "-v"]
