@@ -11,6 +11,11 @@
 # (1) db_home.zip
 #     Download Oracle Database 19c Enterprise Edition or Standard Edition 2 for Linux x64
 #     from http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html
+# (2) JDK 8u441 tar.gz file
+#     Download JDK 8u441 from Oracle (requires login):
+#     - For x64: jdk-8u441-linux-x64.tar.gz
+#     - For ARM64: jdk-8u441-linux-aarch64.tar.gz
+#     from https://www.oracle.com/java/technologies/javase/8u441-relnotes.html
 #
 # HOW TO BUILD THIS IMAGE
 # -----------------------
@@ -39,6 +44,7 @@ LABEL "provider"="Oracle"                                               \
 # Argument to control removal of components not needed after db software installation
 ARG SLIMMING=true
 ARG INSTALL_FILE_1="LINUX.X64_193000_db_home.zip"
+ARG JDK_FILE="jdk-8u441-linux-x64.tar.gz"
 
 # Environment variables required for this build (do NOT change)
 # -------------------------------------------------------------
@@ -127,7 +133,20 @@ USER oracle
 COPY --chown=oracle:dba --from=builder $ORACLE_BASE $ORACLE_BASE
 
 USER root
-RUN "$ORACLE_BASE"/oraInventory/orainstRoot.sh && \
+
+# Copy JDK file that user must download manually from Oracle
+COPY --chown=oracle:dba $JDK_FILE /tmp/
+
+# Upgrade JDK to 1.8.0_441 to address multiple CVEs
+#   https://app.aikido.dev/issues/6379402/detail?status=open
+RUN cd /tmp && \
+    tar -xvf "${JDK_FILE}" && \
+    rm -rf $ORACLE_HOME/jdk && \
+    mv -f jdk1.8.0_441 $ORACLE_HOME/jdk && \
+    chown -R oracle:dba $ORACLE_HOME/jdk && \
+    rm -f "${JDK_FILE}" && \
+    # Run Oracle post-installation scripts
+    "$ORACLE_BASE"/oraInventory/orainstRoot.sh && \
     "$ORACLE_HOME"/root.sh
 
 USER oracle

@@ -181,6 +181,7 @@ if [ "$(arch)" == "aarch64" ] || [ "$(arch)" == "arm64" ]; then
   PLATFORM=".arm64"
   if [ "${VERSION}" == "19.3.0" ] && { [ "${BASE_ONLY}" -eq 1 ] || [ "${ENTERPRISE}" -eq 1 ]; }; then
     BUILD_OPTS=("--build-arg" "INSTALL_FILE_1=LINUX.ARM64_1919000_db_home.zip" "${BUILD_OPTS[@]}")
+    BUILD_OPTS=("--build-arg" "JDK_FILE=jdk-8u441-linux-aarch64.tar.gz" "${BUILD_OPTS[@]}")
   elif { [ "${VERSION}" == "23.6.0" ] && [ "${FREE}" -eq 1 ]; }; then
     BUILD_OPTS=("--build-arg" "INSTALL_FILE_1=https://download.oracle.com/otn-pub/otn_software/db-free/oracle-database-free-23ai-1.0-1.el8.aarch64.rpm" "${BUILD_OPTS[@]}")
   else
